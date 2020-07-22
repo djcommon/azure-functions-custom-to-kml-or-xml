@@ -1,14 +1,13 @@
 module.exports = async function (context, req) {
     context.log('JavaScript HTTP trigger function processed a request.');
 
-    const ii = (req.query.input || (req.body && req.body.input));
+    const customFormattedDataInput = (req.query.input || (req.body && req.body.input));
+    let input = `${customFormattedDataInput}`
 
-    let input = `${ii}`
+    // extraction of custom formatted data to json data
     let splitObjectRegex = /\((.*?)\)/g;
     let objectResult = input.match(splitObjectRegex)
-
     let geoList = []
-
     if (objectResult && Array.isArray(objectResult) && objectResult.length > 0) {
         console.log(objectResult.length + "\t objects found ")
 
@@ -34,6 +33,7 @@ module.exports = async function (context, req) {
         })
     }
 
+    // custom json to ready for xml json
     let newKML = [];
     if (geoList.length > 0) {
         geoList.map((item) => {
@@ -49,6 +49,7 @@ module.exports = async function (context, req) {
         })
     }
 
+    // object to xml
     function OBJtoXML(obj) {
         var xml = '';
         for (var prop in obj) {
@@ -70,9 +71,12 @@ module.exports = async function (context, req) {
         return xml
     }
 
-
+    // final processing
     let beforeKML = OBJtoXML(newKML)
-    const responseMessage = beforeKML;
+    const responseMessage = `<?xml version="1.0" encoding="UTF-8"?>
+    <kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+        <Document id="1">`+ beforeKML + `</Document>
+        </kml>`;
 
     context.res = {
         // status: 200, /* Defaults to 200 */
